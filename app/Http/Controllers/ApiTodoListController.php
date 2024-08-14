@@ -9,7 +9,17 @@ class ApiTodoListController extends Controller
 {
     public function getList()
     {
-        $result = TodoList::orderBy('id', 'desc')->get();
+        // Ambil semua data dari tabel TodoList
+        $query = TodoList::query();
+
+        // Jika ada parameter 'search', lakukan pencarian
+        if (request('search')) {
+            $query->where('content', 'like', '%' . request('search') . '%');
+        }
+
+        // Urutkan hasil berdasarkan 'id' secara descending
+        $result = $query->orderBy('id', 'desc')->get();
+
         return response()->json([
             'status' => true,
             'message' => 'Data fetched successfully',
@@ -70,6 +80,15 @@ class ApiTodoListController extends Controller
         return response()->json([
             'status' => false,
             'message' => 'Data deleted failed',
+        ]);
+    }
+
+    public function getRead($id) {
+        $result = TodoList::where('id', $id)->first();
+        return response()->json([
+            'status' => true,
+            'message' => 'Data fetched successfully',
+            'data' => $result,
         ]);
     }
 }

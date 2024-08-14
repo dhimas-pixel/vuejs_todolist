@@ -23,5 +23,6 @@ Route::prefix('todolist')->group(function () {
     Route::get('list', [ApiTodoListController::class, 'getList'])->name('todolist.list');
     Route::post('create', [ApiTodoListController::class, 'postCreate'])->name('todolist.create');
     Route::post('update/{id}', [ApiTodoListController::class, 'postUpdate'])->name('todolist.update');
-    Route::get('delete/{id}', [ApiTodoListController::class, 'postDelete'])->name('todolist.delete');
+    Route::post('delete/{id}', [ApiTodoListController::class, 'postDelete'])->name('todolist.delete');
+    Route::get('read/{id}', [ApiTodoListController::class, 'getRead'])->name('todolist.read');
 });

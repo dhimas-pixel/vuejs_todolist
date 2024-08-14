@@ -18,6 +18,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
 
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+
     <style>
         .todolist-wrapper {
             border: 1px solid #ccc;
@@ -61,11 +63,14 @@
                     <div class="text-right mb-3">
                         <a href="javascript:void(0)" @click="openForm" class="btn btn-primary">Tambah</a>
                     </div>
+                    <div class="text-center mb-3">
+                        <input type="text" v-model="search" @change="findData" class="form-control" placeholder="Search text...">
+                    </div>
                     <div class="todolist-wrapper">
                         <table class="table table-striped table-bordered">
                             <tbody>
-                                <tr v-for="data in data_list">
-                                    <td>@{{ data.content }}</td>
+                                <tr v-for="item in data_list">
+                                    <td>@{{ item.content }} <a href="javascript:void(0)" @click="editData(item.id)" class="btn-sm btn-warning">Edit</a> <a href="javascript:void(0)" @click="deleteData(item.id)" class="btn-sm btn-danger">Delete</a></td>
                                 </tr>
                                 <tr v-if="!data_list.length">
                                     <td>Empty Data</td>
@@ -82,16 +87,94 @@
     <script>
         var app = new Vue({
             el: '#app',
+            mounted: function() {
+                this.getDataList();
+            },
             data: {
                 data_list: [],
                 content: "",
+                id: "",
+                search:"",
             },
             methods: {
                 openForm: function() {
                     $('#modal-form').modal('show');
                 },
                 saveTodoList: function() {
-                    alert(this.content);
+                    var form_data = new FormData();
+                    form_data.append('content', this.content);
+
+                    if (this.id) {
+                        axios.post("{{ url("api/todolist/update") }}/" + this.id, form_data)
+                            .then(response => {
+                                var item = response.data;
+                            alert(item.message);
+                            this.getDataList();
+                        }).catch(
+                            error => {
+                                alert("Error : " + error);
+                            }
+                        ).finally(
+                            () => {
+                                $('#modal-form').modal('hide');
+                            }
+                        );
+                    } else {
+                        axios.post("{{ url("api/todolist/create") }}", form_data)
+                            .then(response => {
+                                var item = response.data;
+                                alert(item.message);
+                                this.getDataList();
+                            }).catch(
+                            error => {
+                                alert("Error : " + error);
+                            }
+                        ).finally(
+                            () => {
+                                $('#modal-form').modal('hide');
+                            }
+                        );
+                    }
+                },
+                getDataList: function() {
+                    axios.get("{{ url("api/todolist/list") }}?search=" + this.search)
+                        .then(response => {
+                            this.data_list = response.data.data;
+                    }).catch(
+                        error => {
+                            alert("Error : " + error);
+                        }
+                    );
+                },
+                deleteData: function (id) {
+                    if (confirm("Are you sure?")) {
+                        axios.post("{{ url("api/todolist/delete") }}/" + id)
+                            .then(response => {
+                                var item = response.data;
+                                alert(item.message);
+                                this.getDataList();
+                            }).catch(
+                            error => {
+                                alert("Error : " + error);
+                            }
+                        );
+                    }
+                },
+                editData: function (id) {
+                    this.id = id;
+                    axios.get("{{ url("api/todolist/read") }}/" + this.id)
+                        .then(response => {
+                            var item = response.data.data;
+                            this.content = item.content;
+                            this.openForm();
+                    }).catch(
+                        error => {
+                            alert("Error : " + error);
+                        }
+                    );
+                },
+                findData: function () {
+                    this.getDataList();
                 },
             }
         }, );
